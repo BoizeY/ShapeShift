@@ -14,6 +14,8 @@ public class Player : MonoBehaviour
     public int speed;
     public bool gameStarted;
 
+    private GameManager gameManager;
+    private UIManager uiManager;
     private SpriteRenderer sr;
     private int spriteCounter;
     private float totalScore;
@@ -22,6 +24,8 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        gameManager = GameObject.FindObjectOfType<GameManager>();
+        uiManager = GameObject.FindObjectOfType<UIManager>();
         sr = gameObject.GetComponent<SpriteRenderer>();
         gameStarted = false;
         resetGame();
@@ -38,64 +42,67 @@ public class Player : MonoBehaviour
                 spriteCycling();
             }
 
-            //get distance to the target
-            float dist = Vector3.Distance(target.transform.position, transform.position);
-            //Debug.Log("Distance to other: " + dist);
-
             //check if on target
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                if (spriteCounter == target.getCurrentShape() && (dist <= 1.0f))
-                {
-                    Debug.Log(dist);
-                    //good hit
-                    if (dist <= 1.0f && dist > 0.5f)
-                    {
-                        totalScore += 1;
-                        acc = 1;
-                    }
-                    //great hit
-                    else if (dist <= 0.5f && dist > 0.1f)
-                    {
-                        totalScore += 2;
-                        acc = 2;
-                    }
-                    //execellent hit
-                    else if (dist <= 0.1f)
-                    {
-                        totalScore += 3;
-                        acc = 3;
-                    }
-
-                    //change target to something else
-                    target.changeSprite();
-
-                    //reverse the direction
-                    speed *= -1;
-
-                    // incease the speed of the game
-                    if (speed > 0)
-                    {
-                        speed += 1;
-                    }
-                    else
-                    {
-                        speed -= 1;
-                    }
-                }
-                //player miss, reset game
-                else
-                {
-                    target.changeSprite();
-                    resetGame();
-                    gameStarted = false;
-                }
+                attemptHit();
             }
         }
     }
 
+    public void attemptHit()
+    {
+        //get distance to the target
+        float dist = Vector3.Distance(target.transform.position, transform.position);
 
-    void spriteCycling()
+        if (spriteCounter == target.getCurrentShape() && (dist <= 1.0f))
+        {
+            Debug.Log(dist);
+            //good hit
+            if (dist <= 1.0f && dist > 0.5f)
+            {
+                totalScore += 1;
+                acc = 1;
+            }
+            //great hit
+            else if (dist <= 0.5f && dist > 0.1f)
+            {
+                totalScore += 2;
+                acc = 2;
+            }
+            //execellent hit
+            else if (dist <= 0.1f)
+            {
+                totalScore += 3;
+                acc = 3;
+            }
+
+            //change target to something else
+            target.changeSprite();
+
+            //reverse the direction
+            speed *= -1;
+
+            // incease the speed of the game
+            if (speed > 0)
+            {
+                speed += 1;
+            }
+            else
+            {
+                speed -= 1;
+            }
+        }
+        //player miss, reset game
+        else
+        {
+            target.changeSprite();
+            resetGame();
+            gameStarted = false;
+        }
+    }
+
+    public void spriteCycling()
     {
         if (spriteCounter == 3)
         {
@@ -107,11 +114,42 @@ public class Player : MonoBehaviour
             spriteCounter++;
             sr.sprite = sprites[spriteCounter];
         }
+
+        // Update the UI if using the split UI with icons
+        uiManager.UpdateSplitIcons(spriteCounter);
+    }
+
+    public void reverseSpriteCycling()
+    {
+        // Lower the sprite number
+        spriteCounter--;
+
+        // Wrap if need be
+        spriteCounter = (spriteCounter < 0) ? 3 : spriteCounter;
+
+        // Update the icon on screen
+        sr.sprite = sprites[spriteCounter];
+
+        // Update the UI if using the split UI with icons
+        uiManager.UpdateSplitIcons(spriteCounter);
+    }
+
+    public void setSpriteDirectly(int _newIndex)
+    {
+        // Set the sprite counter
+        spriteCounter = _newIndex;
+
+        // Update the visuals
+        sr.sprite = sprites[spriteCounter];
     }
 
     void resetGame()
     {
         spriteCycling();
+
+        uiManager.HideUI();
+        gameManager.updateHighScore(totalScore);
+
         spriteCounter = 0;
         totalScore = 0;
         speed = 50;
