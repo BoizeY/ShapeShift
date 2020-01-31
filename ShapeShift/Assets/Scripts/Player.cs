@@ -57,7 +57,6 @@ public class Player : MonoBehaviour
 
         if (spriteCounter == target.getCurrentShape() && (dist <= 1.0f))
         {
-            Debug.Log(dist);
             //good hit
             if (dist <= 1.0f && dist > 0.5f)
             {
@@ -145,12 +144,16 @@ public class Player : MonoBehaviour
 
     void resetGame()
     {
+        spriteCounter = 0;
+
         spriteCycling();
 
         uiManager.HideUI();
         gameManager.updateHighScore(totalScore);
 
-        spriteCounter = 0;
+        // Update the UI if using the split UI with icons
+        uiManager.UpdateSplitIcons(spriteCounter);
+
         totalScore = 0;
         speed = 50;
         acc = 0;
